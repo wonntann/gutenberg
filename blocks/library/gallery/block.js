@@ -122,14 +122,15 @@ class GalleryBlock extends Component {
 	dropFiles( files ) {
 		const currentImages = this.props.attributes.images || [];
 		const { setAttributes } = this.props;
-		mediaUpload(
-			files,
-			( images ) => {
+		mediaUpload( {
+			filesList: files,
+			onImagesChange: ( images ) => {
 				setAttributes( {
 					images: currentImages.concat( images ),
 				} );
-			}
-		);
+			},
+			onError: this.props.notices.createErrorNotice,
+		} );
 	}
 
 	componentWillReceiveProps( nextProps ) {
@@ -143,7 +144,7 @@ class GalleryBlock extends Component {
 	}
 
 	render() {
-		const { attributes, isSelected, className } = this.props;
+		const { attributes, className, isSelected, notices } = this.props;
 		const { images, columns = defaultColumnsNumber( attributes ), align, imageCrop, linkTo } = attributes;
 
 		const dropZone = (
@@ -191,6 +192,8 @@ class GalleryBlock extends Component {
 					label={ __( 'Gallery' ) }
 					onSelectImage={ this.onSelectImages }
 					multiple
+					notices={ notices.UI }
+					onError={ notices.createErrorNotice }
 				/>,
 			];
 		}
@@ -221,6 +224,7 @@ class GalleryBlock extends Component {
 				</InspectorControls>
 			),
 			<ul key="gallery" className={ `${ className } align${ align } columns-${ columns } ${ imageCrop ? 'is-cropped' : '' }` }>
+				{ notices.UI }
 				{ dropZone }
 				{ images.map( ( img, index ) => (
 					<li className="blocks-gallery-item" key={ img.id || img.url }>

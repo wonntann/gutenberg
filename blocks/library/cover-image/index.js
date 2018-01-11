@@ -66,6 +66,10 @@ export const settings = {
 		},
 	},
 
+	supports: {
+		notices: true,
+	},
+
 	transforms: {
 		from: [
 			{
@@ -94,10 +98,12 @@ export const settings = {
 		}
 	},
 
-	edit( { attributes, setAttributes, isSelected, className } ) {
+	edit( { attributes, setAttributes, isSelected, className, notices } ) {
 		const { url, title, align, contentAlign, id, hasParallax, dimRatio } = attributes;
 		const updateAlignment = ( nextAlign ) => setAttributes( { align: nextAlign } );
-		const onSelectImage = ( media ) => setAttributes( { url: media.url, id: media.id } );
+		const onSelectImage = ( media ) => ! media ?
+			setAttributes( { url: undefined, id: undefined } ) :
+			setAttributes( { url: media.url, id: media.id } );
 		const toggleParallax = () => setAttributes( { hasParallax: ! hasParallax } );
 		const setDimRatio = ( ratio ) => setAttributes( { dimRatio: ratio } );
 
@@ -183,13 +189,15 @@ export const settings = {
 			return [
 				controls,
 				<ImagePlaceHolder key="cover-image-placeholder"
-					{ ...{ className, icon, label, onSelectImage } }
+					{ ...{ className, icon, label, onSelectImage, notices: notices.UI } }
+					onError={ notices.createErrorNotice }
 				/>,
 			];
 		}
 
 		return [
 			controls,
+			notices.UI,
 			<section
 				key="preview"
 				data-url={ url }

@@ -92,6 +92,15 @@ class ImageBlock extends Component {
 	}
 
 	onSelectImage( media ) {
+		if ( ! media ) {
+			this.props.setAttributes( {
+				url: undefined,
+				alt: undefined,
+				id: undefined,
+				caption: undefined,
+			} );
+			return;
+		}
 		const attributes = { url: media.url, alt: media.alt, id: media.id };
 		if ( media.caption ) {
 			attributes.caption = [ media.caption ];
@@ -139,7 +148,7 @@ class ImageBlock extends Component {
 	}
 
 	render() {
-		const { attributes, setAttributes, isSelected, className, settings, toggleSelection } = this.props;
+		const { attributes, setAttributes, isSelected, className, notices, settings, toggleSelection } = this.props;
 		const { url, alt, caption, align, id, href, width, height } = attributes;
 
 		const availableSizes = this.getAvailableSizes();
@@ -182,6 +191,8 @@ class ImageBlock extends Component {
 					key="image-placeholder"
 					icon="format-image"
 					label={ __( 'Image' ) }
+					notices={ notices.UI }
+					onError={ notices.createErrorNotice }
 					onSelectImage={ this.onSelectImage }
 				/>,
 			];
@@ -215,6 +226,7 @@ class ImageBlock extends Component {
 					) }
 				</InspectorControls>
 			),
+			notices.UI,
 			<figure key="image" className={ classes } style={ figureStyle }>
 				<ImageSize src={ url } dirtynessTrigger={ align }>
 					{ ( sizes ) => {

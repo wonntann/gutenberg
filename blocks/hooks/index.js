@@ -7,3 +7,4 @@ import './deprecated';
 import './generated-class-name';
 import './layout';
 import './matchers';
+import './notices/index';
