@@ -45,7 +45,6 @@ describe( 'PostTaxonomies', () => {
 
 		expect( wrapper.children() ).toHaveLength( 1 );
 		expect( wrapper.childAt( 0 ).props() ).toEqual( {
-			label: 'Categories',
 			slug: 'category',
 			restBase: 'categories',
 		} );
