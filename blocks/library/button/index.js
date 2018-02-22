@@ -176,13 +176,11 @@ export const settings = {
 	},
 
 	getEditWrapperProps( { clear } ) {
-		const props = {};
-
 		if ( clear ) {
-			props[ 'data-clear' ] = 'true';
+			return {
+				'data-clear': 'true',
+			};
 		}
-
-		return props;
 	},
 
 	edit: ButtonBlock,
