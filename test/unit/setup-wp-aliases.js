@@ -14,6 +14,7 @@ global.wp = {
 	'date',
 	'editor',
 	'data',
+	'core-data',
 	'edit-post',
 ].forEach( entryPointName => {
 	Object.defineProperty( global.wp, entryPointName, {
