@@ -87,7 +87,12 @@ exports[`core/cover-image block edit matches snapshot 1`] = `
         type="file"
       />
     </div>
-    *** Mock(Media upload button) ***
+    <button
+      class="components-button button button-large"
+      type="button"
+    >
+      Add from Media Library
+    </button>
   </div>
 </div>
 `;

@@ -45,7 +45,12 @@ exports[`core/video block edit matches snapshot 1`] = `
         Use URL
       </button>
     </form>
-    *** Mock(Media upload button) ***
+    <button
+      class="components-button button button-large"
+      type="button"
+    >
+      Add from Media Library
+    </button>
   </div>
 </div>
 `;
