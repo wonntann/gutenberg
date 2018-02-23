@@ -252,7 +252,5 @@ export const query = ( mapSelectToProps ) => {
 		plugin: 'Gutenberg',
 	} );
 
-	return withSelect( ( props ) => {
-		return mapSelectToProps( select, props );
-	} );
+	return withSelect( mapSelectToProps );
 };

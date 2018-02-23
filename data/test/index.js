@@ -1,6 +1,7 @@
 /**
  * External dependencies
  */
+import { noop } from 'lodash';
 import { mount } from 'enzyme';
 
 /**
@@ -20,6 +21,7 @@ import {
 	withSelect,
 	withDispatch,
 	subscribe,
+	query,
 } from '../';
 
 describe( 'store', () => {
@@ -66,101 +68,112 @@ describe( 'select', () => {
 } );
 
 describe( 'withSelect', () => {
-	it( 'passes the relevant data to the component', () => {
-		registerReducer( 'reactReducer', () => ( { reactKey: 'reactState' } ) );
-		registerSelectors( 'reactReducer', {
-			reactSelector: ( state, key ) => state[ key ],
+	function cases( withSelectImpl, extraAssertions = noop ) {
+		it( 'passes the relevant data to the component', () => {
+			registerReducer( 'reactReducer', () => ( { reactKey: 'reactState' } ) );
+			registerSelectors( 'reactReducer', {
+				reactSelector: ( state, key ) => state[ key ],
+			} );
+
+			// In normal circumstances, the fact that we have to add an arbitrary
+			// prefix to the variable name would be concerning, and perhaps an
+			// argument that we ought to expect developer to use select from the
+			// wp.data export. But in-fact, this serves as a good deterrent for
+			// including both `withSelect` and `select` in the same scope, which
+			// shouldn't occur for a typical component, and if it did might wrongly
+			// encourage the developer to use `select` within the component itself.
+			const Component = withSelectImpl( ( _select, ownProps ) => ( {
+				data: _select( 'reactReducer' ).reactSelector( ownProps.keyName ),
+			} ) )( ( props ) => <div>{ props.data }</div> );
+
+			const wrapper = mount( <Component keyName="reactKey" /> );
+
+			// Wrapper is the enhanced component. Find props on the rendered child.
+			const child = wrapper.childAt( 0 );
+			expect( child.props() ).toEqual( {
+				keyName: 'reactKey',
+				data: 'reactState',
+			} );
+			expect( wrapper.text() ).toBe( 'reactState' );
+			extraAssertions();
+
+			wrapper.unmount();
 		} );
 
-		// In normal circumstances, the fact that we have to add an arbitrary
-		// prefix to the variable name would be concerning, and perhaps an
-		// argument that we ought to expect developer to use select from the
-		// wp.data export. But in-fact, this serves as a good deterrent for
-		// including both `withSelect` and `select` in the same scope, which
-		// shouldn't occur for a typical component, and if it did might wrongly
-		// encourage the developer to use `select` within the component itself.
-		const Component = withSelect( ( _select, ownProps ) => ( {
-			data: _select( 'reactReducer' ).reactSelector( ownProps.keyName ),
-		} ) )( ( props ) => <div>{ props.data }</div> );
+		it( 'should rerun selection on state changes', () => {
+			registerReducer( 'counter', ( state = 0, action ) => {
+				if ( action.type === 'increment' ) {
+					return state + 1;
+				}
 
-		const wrapper = mount( <Component keyName="reactKey" /> );
+				return state;
+			} );
 
-		// Wrapper is the enhanced component. Find props on the rendered child.
-		const child = wrapper.childAt( 0 );
-		expect( child.props() ).toEqual( {
-			keyName: 'reactKey',
-			data: 'reactState',
-		} );
-		expect( wrapper.text() ).toBe( 'reactState' );
+			registerSelectors( 'counter', {
+				getCount: ( state ) => state,
+			} );
 
-		wrapper.unmount();
-	} );
+			registerActions( 'counter', {
+				increment: () => ( { type: 'increment' } ),
+			} );
 
-	it( 'should rerun selection on state changes', () => {
-		registerReducer( 'counter', ( state = 0, action ) => {
-			if ( action.type === 'increment' ) {
-				return state + 1;
-			}
+			const Component = compose( [
+				withSelectImpl( ( _select ) => ( {
+					count: _select( 'counter' ).getCount(),
+				} ) ),
+				withDispatch( ( _dispatch ) => ( {
+					increment: _dispatch( 'counter' ).increment,
+				} ) ),
+			] )( ( props ) => (
+				<button onClick={ props.increment }>
+					{ props.count }
+				</button>
+			) );
 
-			return state;
-		} );
+			const wrapper = mount( <Component /> );
 
-		registerSelectors( 'counter', {
-			getCount: ( state ) => state,
-		} );
+			const button = wrapper.find( 'button' );
 
-		registerActions( 'counter', {
-			increment: () => ( { type: 'increment' } ),
-		} );
+			button.simulate( 'click' );
 
-		const Component = compose( [
-			withSelect( ( _select ) => ( {
-				count: _select( 'counter' ).getCount(),
-			} ) ),
-			withDispatch( ( _dispatch ) => ( {
-				increment: _dispatch( 'counter' ).increment,
-			} ) ),
-		] )( ( props ) => (
-			<button onClick={ props.increment }>
-				{ props.count }
-			</button>
-		) );
+			expect( button.text() ).toBe( '1' );
+			extraAssertions();
 
-		const wrapper = mount( <Component /> );
-
-		const button = wrapper.find( 'button' );
-
-		button.simulate( 'click' );
-
-		expect( button.text() ).toBe( '1' );
-
-		wrapper.unmount();
-	} );
-
-	it( 'should rerun selection on props changes', () => {
-		registerReducer( 'counter', ( state = 0, action ) => {
-			if ( action.type === 'increment' ) {
-				return state + 1;
-			}
-
-			return state;
+			wrapper.unmount();
 		} );
 
-		registerSelectors( 'counter', {
-			getCount: ( state, offset ) => state + offset,
+		it( 'should rerun selection on props changes', () => {
+			registerReducer( 'counter', ( state = 0, action ) => {
+				if ( action.type === 'increment' ) {
+					return state + 1;
+				}
+
+				return state;
+			} );
+
+			registerSelectors( 'counter', {
+				getCount: ( state, offset ) => state + offset,
+			} );
+
+			const Component = withSelectImpl( ( _select, ownProps ) => ( {
+				count: _select( 'counter' ).getCount( ownProps.offset ),
+			} ) )( ( props ) => <div>{ props.count }</div> );
+
+			const wrapper = mount( <Component offset={ 0 } /> );
+
+			wrapper.setProps( { offset: 10 } );
+
+			expect( wrapper.childAt( 0 ).text() ).toBe( '10' );
+			extraAssertions();
+
+			wrapper.unmount();
 		} );
+	}
 
-		const Component = withSelect( ( _select, ownProps ) => ( {
-			count: _select( 'counter' ).getCount( ownProps.offset ),
-		} ) )( ( props ) => <div>{ props.count }</div> );
+	cases( withSelect );
 
-		const wrapper = mount( <Component offset={ 0 } /> );
-
-		wrapper.setProps( { offset: 10 } );
-
-		expect( wrapper.childAt( 0 ).text() ).toBe( '10' );
-
-		wrapper.unmount();
+	describe( 'query backwards-compatibility', () => {
+		cases( query, () => expect( console ).toHaveWarned() );
 	} );
 } );
 
