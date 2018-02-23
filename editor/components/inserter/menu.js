@@ -131,7 +131,7 @@ export class InserterMenu extends Component {
 				return recentItems;
 
 			case 'blocks':
-				predicate = ( item ) => item.category !== 'embed' && item.category !== 'reusable-blocks';
+				predicate = ( item ) => item.category !== 'embed' && item.category !== 'saved';
 				break;
 
 			case 'embeds':
@@ -139,7 +139,7 @@ export class InserterMenu extends Component {
 				break;
 
 			case 'saved':
-				predicate = ( item ) => item.category === 'reusable-blocks';
+				predicate = ( item ) => item.category === 'saved';
 				break;
 		}
 
