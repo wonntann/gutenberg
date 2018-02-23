@@ -96,6 +96,17 @@ function gutenberg_filter_meta_boxes( $meta_boxes ) {
 		'postimagediv',
 	);
 
+	$custom_taxonomy_slugs = get_taxonomies(
+		array(
+			'public'   => true,
+			'_builtin' => false,
+		)
+	);
+
+	foreach ( $custom_taxonomy_slugs as $custom_taxonomy_slug ) {
+		$core_side_meta_boxes [] = $custom_taxonomy_slug . 'div';
+	}
+
 	$core_normal_meta_boxes = array(
 		'revisionsdiv',
 		'postexcerpt',
