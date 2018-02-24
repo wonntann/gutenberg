@@ -2496,7 +2496,7 @@ describe( 'selectors', () => {
 					initialAttributes: { ref: 123 },
 					title: 'My reusable block',
 					icon: 'test',
-					category: 'reusable-blocks',
+					category: 'saved',
 					keywords: [],
 					isDisabled: false,
 				},

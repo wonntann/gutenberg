@@ -1156,7 +1156,7 @@ function buildInserterItemFromReusableBlock( enabledBlockTypes, reusableBlock ) 
 		initialAttributes: { ref: reusableBlock.id },
 		title: reusableBlock.title,
 		icon: referencedBlockType.icon,
-		category: 'reusable-blocks',
+		category: 'saved',
 		keywords: [],
 		isDisabled: false,
 	};
