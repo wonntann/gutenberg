@@ -3,6 +3,7 @@
  */
 import { connect } from 'react-redux';
 import { get, unescape as unescapeString, without, find, some } from 'lodash';
+import { stringify } from 'querystring';
 
 /**
  * WordPress dependencies
@@ -22,7 +23,7 @@ const DEFAULT_QUERY = {
 	per_page: 100,
 	orderby: 'count',
 	order: 'desc',
-	_fields: [ 'id', 'name', 'parent' ],
+	_fields: 'id,name,parent',
 };
 
 class HierarchicalTermSelector extends Component {
@@ -104,19 +105,23 @@ class HierarchicalTermSelector extends Component {
 				adding: true,
 			} );
 			// Tries to create a term or fetch it if it already exists
-			const Model = wp.api.getTaxonomyModel( this.props.slug );
-			this.addRequest = new Model( {
-				name: formName,
-				parent: formParent ? formParent : undefined,
-			} ).save();
+			const basePath = wp.api.getTaxonomyRoute( this.props.slug );
+			this.addRequest = wp.apiRequest( {
+				path: `/wp/v2/${ basePath }`,
+				method: 'POST',
+				data: {
+					name: formName,
+					parent: formParent ? formParent : undefined,
+				},
+			} );
 			this.addRequest
 				.then( resolve, ( xhr ) => {
 					const errorCode = xhr.responseJSON && xhr.responseJSON.code;
 					if ( errorCode === 'term_exists' ) {
 						// search the new category created since last fetch
-						this.addRequest = new Model().fetch(
-							{ data: { ...DEFAULT_QUERY, parent: formParent || 0, search: formName } }
-						);
+						this.addRequest = wp.apiRequest( {
+							path: `/wp/v2/${ basePath }?${ stringify( { ...DEFAULT_QUERY, parent: formParent || 0, search: formName } ) }`,
+						} );
 						return this.addRequest.then( searchResult => {
 							resolve( this.findTerm( searchResult, formParent, formName ) );
 						}, reject );
@@ -156,9 +161,8 @@ class HierarchicalTermSelector extends Component {
 	}
 
 	componentDidMount() {
-		const Collection = wp.api.getTaxonomyCollection( this.props.slug );
-		this.fetchRequest = new Collection()
-			.fetch( { data: DEFAULT_QUERY } )
+		const basePath = wp.api.getTaxonomyRoute( this.props.slug );
+		this.fetchRequest = wp.apiRequest( { path: `/wp/v2/${ basePath }?${ stringify( DEFAULT_QUERY ) }` } )
 			.done( ( terms ) => {
 				const availableTermsTree = buildTermsTree( terms );
 
